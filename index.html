@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <link rel="icon" href="src/icon.png" type="image/png">
+    <title>TV Digital Online - IPTV Portal</title>
+    <style>
+        :root { 
+            --bg-color: #0a0a0c; 
+            --panel-color: #131419; 
+            --neon-cyan: #00f2fe; 
+            --neon-blue: #4facfe; 
+            --text-main: #ffffff; 
+            --text-muted: #6c7a89; 
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+            background-image: linear-gradient(rgba(18, 18, 24, 0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(18, 18, 24, 0.7) 1px, transparent 1px); 
+            background-size: 30px 30px; 
+        }
+         #halaman-utama { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            width: 100%; 
+            padding: 40px 20px; 
+            min-height: 100vh;
+        }
+        h1 { 
+            font-size: 48px; 
+            font-weight: 800; 
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 10px; 
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3); 
+        }
+        .subtitle { 
+            color: var(--text-muted); 
+            margin-bottom: 60px; 
+            font-size: 13px; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+        }
+        .header-banner {
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 1/1;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 60px;
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 242, 254, 0.1);
+        }
+        .header-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .channel-container { 
+            width: 100%; 
+            max-width: 1400px; 
+            background: var(--panel-color); 
+            border: 1px solid rgba(0, 242, 254, 0.15); 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+        }
+        .panel-label { 
+            font-size: 12px; 
+            color: var(--neon-cyan); 
+            letter-spacing: 2px; 
+            text-transform: uppercase; 
+            margin-bottom: 30px; 
+            font-weight: bold; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .panel-label::before { 
+            content: ''; 
+            display: inline-block; 
+            width: 6px; 
+            height: 6px; 
+            background-color: var(--neon-cyan); 
+            box-shadow: 0 0 8px var(--neon-cyan); 
+            border-radius: 50%; 
+        }
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .btn-channel { 
+            background: rgba(255, 255, 255, 0.02); 
+            color: #b5c2d5; 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            padding: 25px 20px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            letter-spacing: 0.5px;
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none; 
+        }
+        .channel-icon {
+            font-size: 36px;
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+        .btn-channel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .btn-channel:hover { 
+            color: #ffffff; 
+            background: rgba(0, 242, 254, 0.08); 
+            border-color: rgba(0, 242, 254, 0.5); 
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3); 
+            transform: translateY(-4px); 
+        }
+        .btn-channel:hover::before {
+            opacity: 1;
+        }
+        .channel-status {
+            font-size: 10px;
+            color: var(--neon-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+            .btn-channel {
+                padding: 20px 15px;
+                font-size: 13px;
+            }
+            .channel-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="halaman-utama">
+        <h1>📺 TV Digital Online</h1>
+        <p class="subtitle">Select Your Favorite Channel To Watch Live</p>
+        <div class="header-banner">
+            <img src="https://api.nexadev.my.id/uploder/uploads/Ktumwg.jpg" alt="TV Banner" loading="lazy">
+        </div>
+        <div class="channel-container">
+            <div class="panel-label">🔴 Daftar Saluran TV Tersedia</div>
+            <div class="channel-grid" id="channel-grid">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const channels = [
+            { name: 'Rajawali TV (RTV)', icon: 'https://api.nexadev.my.id/uploder/uploads/wDwUiZ.jpg' },
+            { name: 'Trans 7', icon: 'https://images.seeklogo.com/logo-png/32/1/trans-7-logo-png_seeklogo-326342.png' },
+            { name: 'Trans TV', icon: 'https://images.seeklogo.com/logo-png/61/1/trans-tv-logo-png_seeklogo-612415.png' },
+            { name: 'CNN Indonesia', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/CNN_Indonesia_logo.svg/3840px-CNN_Indonesia_logo.svg.png' },
+            { name: 'RCTI', icon: 'https://images.seeklogo.com/logo-png/30/1/rcti-logo-png_seeklogo-306275.png' },
+            { name: 'GTV', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtm6x2qZnNWXXxdp7nis31Ug-y5dYer7LPXy2ojkG9SSLFggiT1tjlIi0&s=10' },
+            { name: 'Kompas TV', icon: 'https://api.nexadev.my.id/uploder/uploads/cWBkOj.png' },
+            { name: 'TV One', icon: 'https://api.nexadev.my.id/uploder/uploads/KtrqAv.png' },
+            { name: 'MNC TV', icon: 'https://api.nexadev.my.id/uploder/uploads/BsXtMl.png' },
+            { name: 'MDTV', icon: 'https://api.nexadev.my.id/uploder/uploads/jwaLbb.png' },
+            { name: 'TVRI Sport', icon: 'https://api.nexadev.my.id/uploder/uploads/LtdXjj.png' },
+            { name: 'ANTV', icon: '⭐' },
+            { name: 'BEIN Sports', icon: '⚽' },
+            { name: 'Nickelodeon', icon: '🎮' },
+            { name: 'Disney Channel', icon: '✨' }
+        ];
+
+        const channelGrid = document.getElementById('channel-grid');
+
+        function renderChannels() {
+            channelGrid.innerHTML = '';
+            channels.forEach((channel) => {
+                const slug = channel.name.toLowerCase()
+                                    .replace(/[^a-z0-9\s]/g, '') 
+                                    .replace(/\s+/g, '-');       
+                
+                const link = document.createElement('a');
+                link.className = 'btn-channel';
+                link.href = `./${slug}/`; 
+                
+                const iconContent = channel.icon.startsWith('http') 
+                    ? `<img class="channel-icon" src="${channel.icon}" alt="${channel.name}" loading="lazy">`
+                    : `<span style="font-size: 36px; line-height: 60px;">${channel.icon}</span>`;
+
+                link.innerHTML = `
+                    ${iconContent}
+                    <div>${channel.name}</div>
+                    <div class="channel-status">● LIVE</div>
+                `;
+                channelGrid.appendChild(link);
+            });
+        }
+
+        renderChannels();
+    </script>
+</body>
+</html>
