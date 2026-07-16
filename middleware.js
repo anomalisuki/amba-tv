@@ -1,5 +1,5 @@
 // ─── KETIK DI SINI UNTUK ATUR WEB AMBA TV ───
-const MAINTENANCE_MODE = true; // Ubah ke false untuk mematikan maintenance
+const MAINTENANCE_MODE = false; // Ubah ke false untuk mematikan maintenance
 // ───────────────────────────────────────────
 
 export default async function middleware(request) {
