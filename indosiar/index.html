@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>INDOSIAR - Player Terminal</title>
+    <title>Indosiar Player - Terminal</title>
+    <!-- Library Shaka Player tetap dipertahankan untuk memproses MPD & ClearKey -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.13.6/shaka-player.compiled.js"></script>
+    
     <style>
         :root { 
             --bg-color: #050507; 
@@ -65,10 +68,9 @@
             position: relative; 
             aspect-ratio: 16 / 9; 
         }
-        iframe { 
+        video { 
             width: 100%; 
             height: 100%; 
-            border: none; 
             display: block; 
             aspect-ratio: 16 / 9; 
         }
@@ -97,22 +99,58 @@
 </head>
 <body>
 
+    <!-- Structure Mengikuti Kode Kedua Secara Penuh -->
     <div class="player-header">
-        <div class="title-display">ONLINE // INDOSIAR</div>
+        <div class="title-display">ONLINE // Indosiar</div>
         <div class="badge-live">● LIVE FEED</div>
     </div>
     
     <div class="video-wrapper">
-        <iframe 
-            src="https://www.m3u8player.online/embed/dash?url=https%3A%2F%2Fcdnbal1.indihometv.com%2Fatm%2FDASH%2Findosiar%2Fmanifest.mpd" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
-            allowfullscreen 
-            scrolling="no"
-            loading="lazy">
-        </iframe>
+        <!-- Menggunakan kontrol bawaan browser natif (Play, Mute, PiP, Fullscreen otomatis terhandle) -->
+        <video id="video" controls autoplay playsinline></video>
     </div>
 
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
+    <script>
+        shaka.polyfill.installAll();
+
+        const video = document.getElementById('video');
+        // Manifest URL & ClearKeys dari kode pertama tetap dipertahankan agar stream bisa didekripsi
+        const manifestUrl = 'https://canal86.my.id/m3u/ch8/out/v1/e930be336fed49e6b26a7554e113f7a4/index.mpd';
+        
+        const clearKeys = {
+            'ab1fe99e4e4f4cbe95930b3154c1fb19': 'c7f529deccbf6709e3e65c61c8d1344f'
+        };
+
+        async function initPlayer() {
+            if (shaka.Player.isBrowserSupported()) {
+                const shakaPlayer = new shaka.Player(video);
+                
+                // Konfigurasi DRM ClearKeys bawaan
+                shakaPlayer.configure({
+                    drm: {
+                        clearKeys: clearKeys
+                    },
+                    streaming: {
+                        bufferingGoal: 10
+                    }
+                });
+
+                try {
+                    await shakaPlayer.load(manifestUrl);
+                    console.log('🎬 Shaka Player berhasil dimuat!');
+                    video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
+                } catch (err) {
+                    console.error('Gagal memuat stream:', err);
+                }
+            } else {
+                console.error('Browser tidak mendukung Shaka Player.');
+            }
+        }
+
+        // Jalankan player setelah elemen HTML siap
+        window.addEventListener('DOMContentLoaded', initPlayer);
+    </script>
 </body>
 </html>
