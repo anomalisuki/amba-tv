@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SCTV - Player Terminal</title>
+    <title>SCTV Player - Terminal</title>
+    <!-- Library Shaka Player tetap dipertahankan untuk memproses MPD & ClearKey -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.13.6/shaka-player.compiled.js"></script>
+    
     <style>
         :root { 
             --bg-color: #050507; 
@@ -65,10 +68,9 @@
             position: relative; 
             aspect-ratio: 16 / 9; 
         }
-        iframe { 
+        video { 
             width: 100%; 
             height: 100%; 
-            border: none; 
             display: block; 
             aspect-ratio: 16 / 9; 
         }
@@ -97,22 +99,58 @@
 </head>
 <body>
 
+    <!-- Structure Mengikuti Kode Kedua Secara Penuh -->
     <div class="player-header">
         <div class="title-display">ONLINE // SCTV</div>
         <div class="badge-live">● LIVE FEED</div>
     </div>
     
     <div class="video-wrapper">
-        <iframe 
-            src="https://www.m3u8player.online/embed/dash?url=https%3A%2F%2Fcdnbal1.indihometv.com%2Fatm%2FDASH%2Fsctv%2Fmanifest.mpd" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
-            allowfullscreen 
-            scrolling="no"
-            loading="lazy">
-        </iframe>
+        <!-- Menggunakan kontrol bawaan browser natif (Play, Mute, PiP, Fullscreen otomatis terhandle) -->
+        <video id="video" controls autoplay playsinline></video>
     </div>
 
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
+    <script>
+        shaka.polyfill.installAll();
+
+        const video = document.getElementById('video');
+        // Manifest URL & ClearKeys dari kode pertama tetap dipertahankan agar stream bisa didekripsi
+        const manifestUrl = 'https://canal86.my.id/m3u/ch5/out/v1/9e9aba7068ca4c7f8a73381bef5f8742/index.mpd';
+        
+        const clearKeys = {
+            '93d5b9f9d5d14f15b1ba9582f332d1fc': '116e4014a662fef4ea5d7671dd5120d8'
+        };
+
+        async function initPlayer() {
+            if (shaka.Player.isBrowserSupported()) {
+                const shakaPlayer = new shaka.Player(video);
+                
+                // Konfigurasi DRM ClearKeys bawaan
+                shakaPlayer.configure({
+                    drm: {
+                        clearKeys: clearKeys
+                    },
+                    streaming: {
+                        bufferingGoal: 10
+                    }
+                });
+
+                try {
+                    await shakaPlayer.load(manifestUrl);
+                    console.log('🎬 Shaka Player berhasil dimuat!');
+                    video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
+                } catch (err) {
+                    console.error('Gagal memuat stream:', err);
+                }
+            } else {
+                console.error('Browser tidak mendukung Shaka Player.');
+            }
+        }
+
+        // Jalankan player setelah elemen HTML siap
+        window.addEventListener('DOMContentLoaded', initPlayer);
+    </script>
 </body>
 </html>
