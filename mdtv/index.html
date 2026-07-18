@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MDTV - Player Terminal</title>
-    <!-- Library untuk memutar format .m3u8 (HLS) di browser -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>MDTV Player - Terminal</title>
+    <!-- Library Shaka Player tetap dipertahankan untuk memproses MPD & ClearKey -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.13.6/shaka-player.compiled.js"></script>
+    
     <style>
         :root { 
             --bg-color: #050507; 
@@ -86,7 +87,7 @@
             cursor: pointer; 
             transition: all 0.3s; 
             font-weight: 600;
-            text-decoration: none; /* Menghilangkan underline pada link */
+            text-decoration: none; 
             display: inline-block;
         }
         .btn-back:hover { 
@@ -98,38 +99,53 @@
 </head>
 <body>
 
+    <!-- Structure Mengikuti Kode Kedua Secara Penuh -->
     <div class="player-header">
         <div class="title-display">ONLINE // MDTV</div>
         <div class="badge-live">● LIVE FEED</div>
     </div>
     
     <div class="video-wrapper">
-        <video id="video" controls autoplay></video>
+        <!-- Menggunakan kontrol bawaan browser natif (Play, Mute, PiP, Fullscreen otomatis terhandle) -->
+        <video id="video" controls autoplay playsinline></video>
     </div>
 
-    <!-- href="../" mengarahkan kembali ke root/home utama -->
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
     <script>
-        const video = document.getElementById('video');
-        // URL m3u8 streaming MDTV milik Anda
-        const streamUrl = 'https://op-flashcon-digdayahd-1.dens.tv/h/h223/02.m3u8';
+        shaka.polyfill.installAll();
 
-        function initPlayer() {
-            if (Hls.isSupported()) {
-                const hls = new Hls({
-                    enableWorker: false,
-                    debug: false
+        const video = document.getElementById('video');
+        // Manifest URL & ClearKeys dari kode pertama tetap dipertahankan agar stream bisa didekripsi
+        const manifestUrl = 'https://canal86.my.id/m3u/ch5/out/v1/3aefa03d32954b678e5faab6daa04b58/index.mpd';
+        
+        const clearKeys = {
+            '91dec6fd9fd84b879aacc027bf532790': '588a2214bfb91fc0150b9ac2a745cef8'
+        };
+
+        async function initPlayer() {
+            if (shaka.Player.isBrowserSupported()) {
+                const shakaPlayer = new shaka.Player(video);
+                
+                // Konfigurasi DRM ClearKeys bawaan
+                shakaPlayer.configure({
+                    drm: {
+                        clearKeys: clearKeys
+                    },
+                    streaming: {
+                        bufferingGoal: 10
+                    }
                 });
-                hls.loadSource(streamUrl);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+
+                try {
+                    await shakaPlayer.load(manifestUrl);
+                    console.log('🎬 Shaka Player berhasil dimuat!');
                     video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
-                });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Jalur alternatif untuk browser Safari/iOS natif
-                video.src = streamUrl;
-                video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
+                } catch (err) {
+                    console.error('Gagal memuat stream:', err);
+                }
+            } else {
+                console.error('Browser tidak mendukung Shaka Player.');
             }
         }
 
