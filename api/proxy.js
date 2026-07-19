@@ -1,5 +1,7 @@
-export default async function handler(req, res) {
-    // 1. Replikasi penuh CORS Unblock header injection
+import https from 'https';
+
+export default function handler(req, res) {
+    // 1. Pertahankan konfigurasi CORS agar sesuai dengan ekstensi
     res.setHeader('Access-Control-Allow-Origin', 'https://amba-tv.vercel.app');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS');
@@ -19,38 +21,43 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 2. Tembak langsung URL tanpa memalsukan domain luar 
-        // Biarkan header berjalan natural layaknya request dari domain vercel kamu sesuai instruksi ekstensi
-        const response = await fetch(url, {
+        const targetUrl = new URL(url);
+
+        // 2. Opsi request menggunakan modul HTTPS native untuk kebebasan header penuh
+        const options = {
+            hostname: targetUrl.hostname,
+            path: targetUrl.pathname + targetUrl.search,
             method: 'GET',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
                 'Accept': '*/*',
+                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+                // Replikasi setingan ekstensi secara mentah
                 'Origin': 'https://amba-tv.vercel.app',
                 'Referer': 'https://amba-tv.vercel.app/'
             }
+        };
+
+        const proxyReq = https.request(options, (proxyRes) => {
+            // Salin Content-Type asli dari server target (baik berkas teks mpd maupun binary m4s)
+            const contentType = proxyRes.headers['content-type'];
+            if (contentType) {
+                res.setHeader('Content-Type', contentType);
+            }
+
+            res.status(proxyRes.statusCode);
+
+            // Kumpulkan data chunk dan langsung teruskan ke browser
+            proxyRes.pipe(res);
         });
-        
-        if (!response.ok) {
-            return res.status(response.status).send(`Target error: ${response.status}`);
-        }
 
-        const contentType = response.headers.get('content-type');
-        if (contentType) {
-            res.setHeader('Content-Type', contentType);
-        }
+        proxyReq.on('error', (e) => {
+            res.status(500).json({ error: 'Proxy Request Error', details: e.message });
+        });
 
-        // Handle file transmisi stream video (.m4s, .mp4, dll)
-        if (url.includes('.m4s') || url.includes('.mp4') || !contentType?.includes('text')) {
-            const arrayBuffer = await response.arrayBuffer();
-            return res.status(200).send(Buffer.from(arrayBuffer));
-        }
-
-        // Handle file teks manifest (.mpd)
-        const data = await response.text();
-        return res.status(200).send(data);
+        proxyReq.end();
 
     } catch (error) {
-        return res.status(500).json({ error: 'Proxy Error', details: error.message });
+        return res.status(500).json({ error: 'URL Parsing Error', details: error.message });
     }
 }
