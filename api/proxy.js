@@ -1,16 +1,13 @@
 export default async function handler(req, res) {
-    // 1. Sesuaikan dengan ekstensi: Tembak spesifik ke domain Vercel kamu
-    // Catatan: Jika Allow-Credentials aktif, Origin TIDAK BOLEH menggunakan tanda bintang (*)
+    // 1. Replikasi penuh CORS Unblock header injection
     res.setHeader('Access-Control-Allow-Origin', 'https://amba-tv.vercel.app');
-    
-    // 2. Kunci utama dari ekstensi: Mengizinkan Credentials
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    
-    // 3. Mengizinkan method yang dipilih di ekstensi
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent, Referer, Origin, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent, Referer, Origin, Authorization, X-Requested-With, Accept');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
-    // Tangani preflight request dari browser
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -22,14 +19,15 @@ export default async function handler(req, res) {
     }
 
     try {
+        // 2. Tembak langsung URL tanpa memalsukan domain luar 
+        // Biarkan header berjalan natural layaknya request dari domain vercel kamu sesuai instruksi ekstensi
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
                 'Accept': '*/*',
-                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Origin': 'https://www.visionplus.id',
-                'Referer': 'https://www.visionplus.id/'
+                'Origin': 'https://amba-tv.vercel.app',
+                'Referer': 'https://amba-tv.vercel.app/'
             }
         });
         
@@ -42,7 +40,7 @@ export default async function handler(req, res) {
             res.setHeader('Content-Type', contentType);
         }
 
-        // Handle file segment video/audio
+        // Handle file transmisi stream video (.m4s, .mp4, dll)
         if (url.includes('.m4s') || url.includes('.mp4') || !contentType?.includes('text')) {
             const arrayBuffer = await response.arrayBuffer();
             return res.status(200).send(Buffer.from(arrayBuffer));
