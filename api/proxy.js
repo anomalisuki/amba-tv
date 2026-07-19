@@ -1,63 +1,76 @@
-import https from 'https';
+// 1. Wajib deklarasikan runtime Edge agar Vercel tahu ini fungsi Edge
+export const config = { runtime: "edge" };
 
-export default function handler(req, res) {
-    // 1. Pertahankan konfigurasi CORS agar sesuai dengan ekstensi
-    res.setHeader('Access-Control-Allow-Origin', 'https://amba-tv.vercel.app');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent, Referer, Origin, Authorization, X-Requested-With, Accept');
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+export default async function handler(request) {
+    // 2. Definisi Header CORS untuk konsistensi dengan Web Player
+    const CORS_HEADERS = {
+        "Access-Control-Allow-Origin": "https://amba-tv.vercel.app",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, HEAD",
+        "Access-Control-Allow-Headers": "Content-Type, User-Agent, Referer, Origin, Authorization, Accept, X-Requested-With",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+    };
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+    // Handle preflight request CORS
+    if (request.method === "OPTIONS") {
+        return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    const { url } = req.query;
+    // 3. Ambil parameter enkripsi 'hash' (Base64) dari URL
+    const { searchParams } = new URL(request.url);
+    const hash = searchParams.get("hash");
 
-    if (!url) {
-        return res.status(400).json({ error: 'Parameter URL tidak ditemukan.' });
+    if (!hash) {
+        return new Response(JSON.stringify({ error: "Parameter hash tidak ditemukan." }), {
+            status: 400,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+        });
     }
 
     try {
-        const targetUrl = new URL(url);
-
-        // 2. Opsi request menggunakan modul HTTPS native untuk kebebasan header penuh
-        const options = {
-            hostname: targetUrl.hostname,
-            path: targetUrl.pathname + targetUrl.search,
-            method: 'GET',
+        // Dekripsi Base64 di Edge Runtime menggunakan metode atob natif
+        const decodedUrl = atob(hash);
+        
+        // 4. Lakukan fetch menggunakan Web API murni yang didukung Edge Runtime
+        const response = await fetch(decodedUrl, {
+            method: "GET",
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-                'Accept': '*/*',
-                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-                // Replikasi setingan ekstensi secara mentah
-                'Origin': 'https://amba-tv.vercel.app',
-                'Referer': 'https://amba-tv.vercel.app/'
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                "Accept": "*/*",
+                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Origin": "https://amba-tv.vercel.app",
+                "Referer": "https://amba-tv.vercel.app/"
             }
+        });
+
+        if (!response.ok) {
+            return new Response(`Target upstream error: ${response.status}`, {
+                status: response.status,
+                headers: CORS_HEADERS
+            });
+        }
+
+        // 5. Salin Content-Type asli (misalnya berkas teks .mpd atau binary .m4s)
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        
+        // Gabungkan header CORS kita dengan header tipe konten asli dari stream video
+        const responseHeaders = {
+            ...CORS_HEADERS,
+            "Content-Type": contentType
         };
 
-        const proxyReq = https.request(options, (proxyRes) => {
-            // Salin Content-Type asli dari server target (baik berkas teks mpd maupun binary m4s)
-            const contentType = proxyRes.headers['content-type'];
-            if (contentType) {
-                res.setHeader('Content-Type', contentType);
-            }
-
-            res.status(proxyRes.statusCode);
-
-            // Kumpulkan data chunk dan langsung teruskan ke browser
-            proxyRes.pipe(res);
+        // Alirkan body response secara mentah (streaming data biner video)
+        return new Response(response.body, {
+            status: 200,
+            headers: responseHeaders
         });
-
-        proxyReq.on('error', (e) => {
-            res.status(500).json({ error: 'Proxy Request Error', details: e.message });
-        });
-
-        proxyReq.end();
 
     } catch (error) {
-        return res.status(500).json({ error: 'URL Parsing Error', details: error.message });
+        return new Response(JSON.stringify({ error: "Edge Proxy Error", detail: String(error) }), {
+            status: 500,
+            headers: { ...CORS_HEADERS, "Content-Type": "application/json" }
+        });
     }
 }
