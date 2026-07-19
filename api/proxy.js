@@ -1,15 +1,13 @@
 export default async function handler(req, res) {
-    // 1. Izinkan akses dari origin manapun agar terbebas dari masalah CORS
+    // 1. Izinkan akses CORS untuk frontend kamu
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent, Referer, Origin');
 
-    // 2. Tangani request Preflight (OPTIONS) otomatis dari browser
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
-    // 3. Ambil URL target dari parameter query (misal: /api/proxy?url=https://...)
     const { url } = req.query;
 
     if (!url) {
@@ -17,25 +15,32 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 4. Lakukan fetch ke server tujuan (Server-side bypass CORS)
+        // Ekstrak domain asal (misal: https://canal86.my.id) untuk memalsukan header
+        const parsedUrl = new URL(url);
+        const originUrl = parsedUrl.origin;
+
+        // 2. Lakukan fetch dengan menyamar secara penuh
         const response = await fetch(url, {
+            method: 'GET',
             headers: {
-                // Menyamarkan request sebagai browser biasa agar tidak diblokir oleh server target
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Origin': originUrl,       // Memalsukan Origin agar disangka dari web mereka sendiri
+                'Referer': originUrl + '/' // Memalsukan Referer
             }
         });
         
         if (!response.ok) {
+            // Jika masih 403 atau error lain, kirimkan status aslinya
             return res.status(response.status).send(`Server target merespons dengan status: ${response.status}`);
         }
 
-        // 5. Teruskan Content-Type asli (misal: application/dash+xml untuk MPD)
         const contentType = response.headers.get('content-type');
         if (contentType) {
             res.setHeader('Content-Type', contentType);
         }
 
-        // 6. Kirim data manifest kembali ke Shaka Player kamu
         const data = await response.text();
         return res.status(200).send(data);
 
