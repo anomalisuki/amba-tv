@@ -15,24 +15,20 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Ekstrak domain asal (misal: https://canal86.my.id) untuk memalsukan header
-        const parsedUrl = new URL(url);
-        const originUrl = parsedUrl.origin;
-
-        // 2. Lakukan fetch dengan menyamar secara penuh
+        // 2. Lakukan fetch dengan menyamar sebagai ekosistem Vision Plus
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                 'Accept': '*/*',
                 'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Origin': originUrl,       // Memalsukan Origin agar disangka dari web mereka sendiri
-                'Referer': originUrl + '/' // Memalsukan Referer
+                // Memalsukan Origin & Referer ke domain resmi Vision Plus
+                'Origin': 'https://www.visionplus.id',
+                'Referer': 'https://www.visionplus.id/'
             }
         });
         
         if (!response.ok) {
-            // Jika masih 403 atau error lain, kirimkan status aslinya
             return res.status(response.status).send(`Server target merespons dengan status: ${response.status}`);
         }
 
