@@ -1,5 +1,5 @@
 // ───────────────────────────────────────────
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 // ───────────────────────────────────────────
 
 export default async function middleware(request) {
