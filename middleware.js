@@ -1,5 +1,5 @@
 // ─── PENGATURAN MAINTENANCE AMBA TV ───
-const ALL_MAINTENANCE = false; // Ubah ke true jika ingin tutup total semua channel
+const ALL_MAINTENANCE = true;
 const MAINTENANCE_CHANNELS = []; // Daftar channel tertentu jika tidak tutup total
 // ───────────────────────────────────────
 
