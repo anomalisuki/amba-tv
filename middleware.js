@@ -1,6 +1,6 @@
 // ─── PENGATURAN MAINTENANCE AMBA TV ───
-const ALL_MAINTENANCE = true;
-const MAINTENANCE_CHANNELS = []; // Daftar channel tertentu jika tidak tutup total
+const ALL_MAINTENANCE = false;
+const MAINTENANCE_CHANNELS = [];
 // ───────────────────────────────────────
 
 export default async function middleware(request) {
