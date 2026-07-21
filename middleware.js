@@ -1,6 +1,6 @@
 // ─── PENGATURAN MAINTENANCE AMBA TV ───
 const ALL_MAINTENANCE = false;
-const MAINTENANCE_CHANNELS = [];
+const MAINTENANCE_CHANNELS = ['indosiar', 'sctv', 'mentari-tv', 'nickelodeon', 'nick-jr', 'cbeebies', 'antv'];
 // ───────────────────────────────────────
 
 export default async function middleware(request) {
