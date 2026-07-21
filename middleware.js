@@ -1,10 +1,13 @@
-// ───────────────────────────────────────────
-const MAINTENANCE_MODE = false;
-// ───────────────────────────────────────────
+// ─── PENGATURAN MAINTENANCE AMBA TV ───
+const ALL_MAINTENANCE = false; // Ubah ke true jika ingin tutup total semua channel
+const MAINTENANCE_CHANNELS = []; // Daftar channel tertentu jika tidak tutup total
+// ───────────────────────────────────────
 
 export default async function middleware(request) {
   const url = new URL(request.url);
+  const path = url.pathname.replace(/^\/|\/$/g, '');
 
+  // 1. Lewatkan aset gambar, css, js, dan halaman maintenance
   if (
     url.pathname === '/maintenance.html' ||
     url.pathname.startsWith('/src/') ||
@@ -13,7 +16,8 @@ export default async function middleware(request) {
     return;
   }
 
-  if (MAINTENANCE_MODE) {
+  // 2. Jika ALL_MAINTENANCE aktif ATAU slug channel ada di daftar spesifik
+  if (ALL_MAINTENANCE || MAINTENANCE_CHANNELS.includes(path)) {
     url.pathname = '/maintenance.html';
     return Response.redirect(url.toString(), 302);
   }
