@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SCTV Player - Terminal</title>
-    <!-- Library Shaka Player tetap dipertahankan untuk memproses MPD & ClearKey -->
+    <!-- Library Shaka Player -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.13.6/shaka-player.compiled.js"></script>
     
     <style>
@@ -115,9 +115,8 @@
 
         const video = document.getElementById('video');
         
-        // URL asli target stream
-        const targetUrl = 'https://canal86.my.id/m3u/ch5/out/v1/9e9aba7068ca4c7f8a73381bef5f8742/index.mpd';
-        const manifestUrl = `/api/proxy.js?url=${encodeURIComponent(targetlUrl)}`;
+        // Menentukan manifest URL menggunakan endpoint proxy Vercel
+        const manifestUrl = '/stream-proxy/m3u/ch5/out/v1/9e9aba7068ca4c7f8a73381bef5f8742/index.mpd';
         
         const clearKeys = {
             '93d5b9f9d5d14f15b1ba9582f332d1fc': '116e4014a662fef4ea5d7671dd5120d8'
@@ -127,7 +126,17 @@
             if (shaka.Player.isBrowserSupported()) {
                 const shakaPlayer = new shaka.Player(video);
                 
-                // Konfigurasi DRM ClearKeys bawaan
+                // Mencegat semua request agar URL absolut dari domain luar dialihkan ke proxy Vercel
+                shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                    request.uris = request.uris.map(uri => {
+                        if (uri.includes('canal86.my.id')) {
+                            return uri.replace('https://canal86.my.id', '/stream-proxy');
+                        }
+                        return uri;
+                    });
+                });
+
+                // Konfigurasi DRM ClearKeys
                 shakaPlayer.configure({
                     drm: {
                         clearKeys: clearKeys
@@ -137,27 +146,9 @@
                     }
                 });
 
-                // ========================================================
-                // INTERCEPTOR FILTER - Membungkus Semua Request ke Proxy
-                // ========================================================
-                shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
-                    // Abaikan request jika sudah mengarah ke proxy vercel lokal
-                    if (request.uris[0].startsWith('/api/proxy') || request.uris[0].includes(window.location.hostname)) {
-                        return;
-                    }
-                    
-                    // Ambil URL asli (baik manifest maupun segmen .m4s)
-                    const originalUrl = request.uris[0];
-                    
-                    // Bungkus ke dalam query parameter proxy vercel memakai backtick (``)
-                    request.uris[0] = `/api/proxy?url=${encodeURIComponent(originalUrl)}`;
-                });
-                // ========================================================
-
                 try {
-                    // Cukup load targetUrl langsung, karena Request Filter di atas yang akan otomatis mengarahkannya ke proxy
-                    await shakaPlayer.load(targetUrl);
-                    console.log('🎬 Shaka Player & Segmen berhasil dijembatani Proxy Vercel!');
+                    await shakaPlayer.load(manifestUrl);
+                    console.log('🎬 Stream berhasil dimuat!');
                     video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
                 } catch (err) {
                     console.error('Gagal memuat stream:', err);
