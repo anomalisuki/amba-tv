@@ -7,24 +7,25 @@
     <style>
         :root { 
             --bg-color: #050507; 
+            --panel-bg: #0b0c10;
             --neon-red: #ff0055; 
             --neon-blue: #00aaff;
+            --neon-cyan: #00f2fe;
             --text-main: #ffffff; 
             --text-muted: #6c7a89; 
+            --border-glow: rgba(0, 170, 255, 0.2);
         }
         *, *::before, *::after { box-sizing: border-box; }
         body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Segoe UI', Roboto, monospace, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 0; 
+            padding: 20px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; 
             min-height: 100vh; 
-            padding: 20px;
         }
         .player-header { 
             width: 100%; 
@@ -33,7 +34,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            border-bottom: 1px solid rgba(0, 242, 254, 0.15);
+            border-bottom: 1px solid var(--border-glow);
             padding-bottom: 15px; 
         }
         .title-display { 
@@ -42,10 +43,10 @@
             letter-spacing: 2px; 
             color: var(--neon-blue); 
             text-transform: uppercase; 
-            text-shadow: 0 0 10px rgba(255, 0, 85, 0.4); 
+            text-shadow: 0 0 10px rgba(0, 170, 255, 0.4); 
         }
         .badge-live { 
-            background: rgba(0, 242, 254, 0.15);
+            background: rgba(255, 0, 85, 0.1);
             color: var(--neon-red); 
             border: 1px solid var(--neon-red); 
             padding: 6px 12px; 
@@ -53,7 +54,7 @@
             font-weight: bold; 
             border-radius: 4px; 
             letter-spacing: 1px; 
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.15); 
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3); 
         }
         .video-wrapper { 
             width: 100%; 
@@ -61,8 +62,8 @@
             background: #000; 
             border-radius: 12px; 
             overflow: hidden; 
-            border: 1px solid rgba(0, 242, 254, 0.15); 
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.15);
+            border: 1px solid rgba(0, 170, 255, 0.2); 
+            box-shadow: 0 0 50px rgba(0, 170, 255, 0.15);
             position: relative; 
             aspect-ratio: 16 / 9; 
         }
@@ -74,10 +75,99 @@
             display: block;
             aspect-ratio: 16 / 9;
         }
+
+        /* Styling Jadwal TV Cyberpunk */
+        .schedule-section {
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 25px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        .schedule-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-blue);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .schedule-container {
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .schedule-container::-webkit-scrollbar { width: 4px; }
+        .schedule-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        .schedule-container::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 4px; }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        .schedule-item:hover {
+            background: rgba(0, 170, 255, 0.05);
+        }
+        .schedule-time {
+            color: var(--neon-blue);
+            font-weight: bold;
+            width: 90px;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        .schedule-program {
+            flex-grow: 1;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .schedule-item.live {
+            background: rgba(255, 0, 85, 0.08);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.1);
+        }
+        .schedule-item.live .schedule-program {
+            color: #fff;
+            font-weight: bold;
+        }
+        .badge-now {
+            background: var(--neon-red);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .status-msg {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+            letter-spacing: 1px;
+        }
+
         .btn-back { 
             margin-top: 25px; 
             background: transparent; 
-            color: #6c7a89; 
+            color: var(--text-muted); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 12px 24px; 
             font-size: 12px; 
@@ -93,7 +183,7 @@
         .btn-back:hover { 
             color: var(--neon-blue); 
             border-color: var(--neon-blue); 
-            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2); 
+            box-shadow: 0 0 10px rgba(0, 170, 255, 0.2); 
         }
     </style>
 </head>
@@ -105,7 +195,7 @@
     </div>
     
     <div class="video-wrapper">
-        <!-- Menggunakan iframe embed resmi dari Detik/CNN yang diizinkan untuk dibagikan -->
+        <!-- Iframe embed resmi CNN Indonesia -->
         <iframe 
             src="https://www.cnnindonesia.com/tv/embed" 
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture" 
@@ -113,7 +203,74 @@
         </iframe>
     </div>
 
+    <div class="schedule-section">
+        <div class="schedule-title">
+            <span>[#] BROADCAST SCHEDULE</span>
+        </div>
+        <div id="schedule-container" class="schedule-container">
+            <div class="status-msg">CONNECTING TO WORKER...</div>
+        </div>
+    </div>
+
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
+    <script>
+        // --- KONFIGURASI JADWAL CNN INDONESIA ---
+        const WORKER_URL = 'https://schedule.daviesdavid528.workers.dev/'; 
+        const TARGET_CHANNEL_URL = 'https://tivie.id/channel/cnnindonesia'; 
+
+        // Fetch Jadwal dari Cloudflare Worker
+        async function fetchSchedule() {
+            const container = document.getElementById('schedule-container');
+            
+            try {
+                const endpoint = `${WORKER_URL}?url=${encodeURIComponent(TARGET_CHANNEL_URL)}&_=${Date.now()}`;
+                
+                const res = await fetch(endpoint);
+                if (!res.ok) throw new Error('Worker response failed');
+                
+                const result = await res.json();
+                if (!result.success || !result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="status-msg">NO SCHEDULE DATA AVAILABLE</div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                let activeRow = null;
+
+                result.data.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = `schedule-item ${item.isLive ? 'live' : ''}`;
+                    row.innerHTML = `
+                        <span class="schedule-time">${item.time} WIB</span>
+                        <span class="schedule-program">${item.title}</span>
+                        ${item.isLive ? '<span class="badge-now">ON AIR</span>' : ''}
+                    `;
+
+                    container.appendChild(row);
+
+                    if (item.isLive) {
+                        activeRow = row;
+                    }
+                });
+
+                // Auto-scroll ke acara yang sedang ON AIR
+                if (activeRow) {
+                    activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="status-msg">FAILED TO CONNECT TO SCHEDULE WORKER</div>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchSchedule();
+            
+            // Refetch tiap 15 detik agar status ON AIR diperbarui secara berkala
+            setInterval(fetchSchedule, 15000);
+        });
+    </script>
 </body>
 </html>
