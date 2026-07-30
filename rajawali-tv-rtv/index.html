@@ -9,23 +9,24 @@
     <style>
         :root { 
             --bg-color: #050507; 
+            --panel-bg: #0b0c10;
             --neon-cyan: #00f2fe; 
+            --neon-pink: #ff0055;
             --text-main: #ffffff; 
             --text-muted: #6c7a89; 
+            --border-glow: rgba(0, 242, 254, 0.2);
         }
         *, *::before, *::after { box-sizing: border-box; }
         body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Segoe UI', Roboto, monospace, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 0; 
+            padding: 20px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; 
             min-height: 100vh; 
-            padding: 20px;
         }
         .player-header { 
             width: 100%; 
@@ -34,7 +35,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            border-bottom: 1px solid rgba(0, 242, 254, 0.2); 
+            border-bottom: 1px solid var(--border-glow); 
             padding-bottom: 15px; 
         }
         .title-display { 
@@ -47,8 +48,8 @@
         }
         .badge-live { 
             background: rgba(255, 0, 85, 0.1); 
-            color: #ff0055; 
-            border: 1px solid #ff0055; 
+            color: var(--neon-pink); 
+            border: 1px solid var(--neon-pink); 
             padding: 6px 12px; 
             font-size: 11px; 
             font-weight: bold; 
@@ -63,7 +64,7 @@
             border-radius: 12px; 
             overflow: hidden; 
             border: 1px solid rgba(255, 255, 255, 0.05); 
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.15); 
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.15); 
             position: relative; 
             aspect-ratio: 16 / 9; 
         }
@@ -73,10 +74,99 @@
             display: block; 
             aspect-ratio: 16 / 9; 
         }
+
+        /* --- STYLING JADWAL TAYANG --- */
+        .schedule-section {
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 25px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        .schedule-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .schedule-container {
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .schedule-container::-webkit-scrollbar { width: 4px; }
+        .schedule-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        .schedule-container::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 4px; }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        .schedule-item:hover {
+            background: rgba(0, 242, 254, 0.05);
+        }
+        .schedule-time {
+            color: var(--neon-cyan);
+            font-weight: bold;
+            width: 90px;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        .schedule-program {
+            flex-grow: 1;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .schedule-item.live {
+            background: rgba(255, 0, 85, 0.08);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.1);
+        }
+        .schedule-item.live .schedule-program {
+            color: #fff;
+            font-weight: bold;
+        }
+        .badge-now {
+            background: var(--neon-pink);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .status-msg {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+            letter-spacing: 1px;
+        }
+
         .btn-back { 
             margin-top: 25px; 
             background: transparent; 
-            color: #6c7a89; 
+            color: var(--text-muted); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 12px 24px; 
             font-size: 12px; 
@@ -86,7 +176,7 @@
             cursor: pointer; 
             transition: all 0.3s; 
             font-weight: 600;
-            text-decoration: none; /* Menghilangkan underline pada link */
+            text-decoration: none; 
             display: inline-block;
         }
         .btn-back:hover { 
@@ -99,7 +189,7 @@
 <body>
 
     <div class="player-header">
-        <div class="title-display">ONLINE // RAJAWALI TV (RTV)</div>
+        <div class="title-display">ONLINE // RAJAWALI TV</div>
         <div class="badge-live">● LIVE FEED</div>
     </div>
     
@@ -107,34 +197,134 @@
         <video id="video" controls autoplay></video>
     </div>
 
-    <!-- href="../" mengarahkan kembali ke root/home utama -->
+    <div class="schedule-section">
+        <div class="schedule-title">
+            <span>[#] BROADCAST SCHEDULE</span>
+        </div>
+        <div id="schedule-container" class="schedule-container">
+            <div class="status-msg">CONNECTING TO SCHEDULE SERVER...</div>
+        </div>
+    </div>
+
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
     <script>
         const video = document.getElementById('video');
-        // URL m3u8 streaming RTV milik Anda
         const streamUrl = 'https://op-flashcon-digdayahd-1.dens.tv/h/h10/01.m3u8?autoplay=true';
+        let cachedScheduleData = [];
 
         function initPlayer() {
             if (Hls.isSupported()) {
-                const hls = new Hls({
-                    enableWorker: false,
-                    debug: false
-                });
+                const hls = new Hls({ enableWorker: false, debug: false });
                 hls.loadSource(streamUrl);
                 hls.attachMedia(video);
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Jalur alternatif untuk browser Safari/iOS natif
                 video.src = streamUrl;
                 video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
             }
         }
 
-        // Jalankan player setelah elemen HTML siap
-        window.addEventListener('DOMContentLoaded', initPlayer);
+        function timeToMinutes(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        // Render jadwal ke DOM dengan offset +30 detik
+        function renderSchedule() {
+            const container = document.getElementById('schedule-container');
+            if (cachedScheduleData.length === 0) return;
+
+            // Menambahkan offset 30 detik (30.000 ms) ke waktu lokal
+            const now = new Date(Date.now() + 30000);
+            const curMin = now.getHours() * 60 + now.getMinutes();
+
+            container.innerHTML = '';
+            let activeRow = null;
+
+            cachedScheduleData.forEach((item, index) => {
+                const startMin = timeToMinutes(item.time);
+                let endMin = (index < cachedScheduleData.length - 1) ? timeToMinutes(cachedScheduleData[index + 1].time) : 24 * 60;
+                
+                const isLive = curMin >= startMin && curMin < endMin;
+
+                const row = document.createElement('div');
+                row.className = `schedule-item ${isLive ? 'live' : ''}`;
+                row.innerHTML = `
+                    <span class="schedule-time">${item.time} WIB</span>
+                    <span class="schedule-program">${item.title}</span>
+                    ${isLive ? '<span class="badge-now">ON AIR</span>' : ''}
+                `;
+
+                container.appendChild(row);
+
+                if (isLive) {
+                    activeRow = row;
+                }
+            });
+
+            if (activeRow) {
+                activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Mengambil data dari server
+        async function fetchRTVSchedule() {
+            const container = document.getElementById('schedule-container');
+            const targetUrl = encodeURIComponent(`https://www.jadwaltv.net/channel/rtv?_=${Date.now()}`);
+            
+            try {
+                const res = await fetch(`https://corsproxy.io/?${targetUrl}`);
+                if (!res.ok) throw new Error('Network error');
+                
+                const html = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const rows = doc.querySelectorAll('table.table tr');
+
+                let items = [];
+                rows.forEach(row => {
+                    const cols = row.querySelectorAll('td');
+                    if (cols.length >= 2) {
+                        const timeRaw = cols[0].textContent.trim();
+                        const title = cols[1].textContent.trim();
+                        const match = timeRaw.match(/\d{2}:\d{2}/);
+                        if (match && title) {
+                            items.push({ time: match[0], title: title });
+                        }
+                    }
+                });
+
+                if (items.length === 0) {
+                    if (cachedScheduleData.length === 0) {
+                        container.innerHTML = `<div class="status-msg">NO SCHEDULE DATA AVAILABLE</div>`;
+                    }
+                    return;
+                }
+
+                cachedScheduleData = items;
+                renderSchedule();
+
+            } catch (err) {
+                console.error(err);
+                if (cachedScheduleData.length === 0) {
+                    container.innerHTML = `<div class="status-msg">FAILED TO FETCH SCHEDULE STREAM</div>`;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initPlayer();
+            fetchRTVSchedule();
+            
+            // Re-evaluasi waktu lokal tiap 10 detik agar pergantian status ON AIR presisi setelah detik ke-30
+            setInterval(renderSchedule, 10000);
+
+            // Fetch ulang data server tiap 5 menit (bypass cache)
+            setInterval(fetchRTVSchedule, 300000);
+        });
     </script>
 </body>
 </html>
