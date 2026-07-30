@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RTV - Player Terminal</title>
-    <!-- Library untuk memutar format .m3u8 (HLS) di browser -->
+    <title>Live Player & Broadcast Schedule</title>
+    <!-- Library HLS.js untuk memutar video .m3u8 -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root { 
@@ -75,7 +75,7 @@
             aspect-ratio: 16 / 9; 
         }
 
-        /* --- STYLING JADWAL TAYANG --- */
+        /* Styling Jadwal TV */
         .schedule-section {
             width: 100%;
             max-width: 1000px;
@@ -189,7 +189,7 @@
 <body>
 
     <div class="player-header">
-        <div class="title-display">ONLINE // RAJAWALI TV</div>
+        <div class="title-display">ONLINE // TERMINAL STREAM</div>
         <div class="badge-live">● LIVE FEED</div>
     </div>
     
@@ -202,128 +202,95 @@
             <span>[#] BROADCAST SCHEDULE</span>
         </div>
         <div id="schedule-container" class="schedule-container">
-            <div class="status-msg">CONNECTING TO SCHEDULE SERVER...</div>
+            <div class="status-msg">CONNECTING TO WORKER...</div>
         </div>
     </div>
 
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
     <script>
-        const video = document.getElementById('video');
-        const streamUrl = 'https://op-flashcon-digdayahd-1.dens.tv/h/h10/01.m3u8?autoplay=true';
-        let cachedScheduleData = [];
+        // --- KONFIGURASI ---
+        const STREAM_URL = 'https://op-flashcon-digdayahd-1.dens.tv/h/h10/01.m3u8?autoplay=true';
+        
+        // Ganti URL Worker ini dengan URL Cloudflare Worker kamu
+        const WORKER_URL = 'https://schedule.daviesdavid528.workers.dev/'; 
 
+        // Ganti URL channel ini dengan URL jadwaltv.net mana saja yang ingin kamu tampilkan
+        const TARGET_CHANNEL_URL = 'https://www.jadwaltv.net/channel/rtv'; 
+        // Contoh lain:
+        // const TARGET_CHANNEL_URL = 'https://www.jadwaltv.net/channel/net';
+        // const TARGET_CHANNEL_URL = 'https://www.jadwaltv.net/channel/trans7';
+
+        const video = document.getElementById('video');
+
+        // Inisialisasi Player
         function initPlayer() {
             if (Hls.isSupported()) {
                 const hls = new Hls({ enableWorker: false, debug: false });
-                hls.loadSource(streamUrl);
+                hls.loadSource(STREAM_URL);
                 hls.attachMedia(video);
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = streamUrl;
+                video.src = STREAM_URL;
                 video.play().catch(err => console.log('Autoplay ditangguhkan browser:', err));
             }
         }
 
-        function timeToMinutes(timeStr) {
-            const [hours, minutes] = timeStr.split(':').map(Number);
-            return hours * 60 + minutes;
-        }
-
-        // Render jadwal ke DOM dengan offset +30 detik
-        function renderSchedule() {
+        // Fetch Jadwal dari Cloudflare Worker
+        async function fetchSchedule() {
             const container = document.getElementById('schedule-container');
-            if (cachedScheduleData.length === 0) return;
-
-            // Menambahkan offset 30 detik (30.000 ms) ke waktu lokal
-            const now = new Date(Date.now() + 30000);
-            const curMin = now.getHours() * 60 + now.getMinutes();
-
-            container.innerHTML = '';
-            let activeRow = null;
-
-            cachedScheduleData.forEach((item, index) => {
-                const startMin = timeToMinutes(item.time);
-                let endMin = (index < cachedScheduleData.length - 1) ? timeToMinutes(cachedScheduleData[index + 1].time) : 24 * 60;
-                
-                const isLive = curMin >= startMin && curMin < endMin;
-
-                const row = document.createElement('div');
-                row.className = `schedule-item ${isLive ? 'live' : ''}`;
-                row.innerHTML = `
-                    <span class="schedule-time">${item.time} WIB</span>
-                    <span class="schedule-program">${item.title}</span>
-                    ${isLive ? '<span class="badge-now">ON AIR</span>' : ''}
-                `;
-
-                container.appendChild(row);
-
-                if (isLive) {
-                    activeRow = row;
-                }
-            });
-
-            if (activeRow) {
-                activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        // Mengambil data dari server
-        async function fetchRTVSchedule() {
-            const container = document.getElementById('schedule-container');
-            const targetUrl = encodeURIComponent(`https://www.jadwaltv.net/channel/rtv?_=${Date.now()}`);
             
             try {
-                const res = await fetch(`https://corsproxy.io/?${targetUrl}`);
-                if (!res.ok) throw new Error('Network error');
+                // Kirim URL channel sebagai query parameter 'url'
+                const endpoint = `${WORKER_URL}?url=${encodeURIComponent(TARGET_CHANNEL_URL)}&_=${Date.now()}`;
                 
-                const html = await res.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const rows = doc.querySelectorAll('table.table tr');
-
-                let items = [];
-                rows.forEach(row => {
-                    const cols = row.querySelectorAll('td');
-                    if (cols.length >= 2) {
-                        const timeRaw = cols[0].textContent.trim();
-                        const title = cols[1].textContent.trim();
-                        const match = timeRaw.match(/\d{2}:\d{2}/);
-                        if (match && title) {
-                            items.push({ time: match[0], title: title });
-                        }
-                    }
-                });
-
-                if (items.length === 0) {
-                    if (cachedScheduleData.length === 0) {
-                        container.innerHTML = `<div class="status-msg">NO SCHEDULE DATA AVAILABLE</div>`;
-                    }
+                const res = await fetch(endpoint);
+                if (!res.ok) throw new Error('Worker response failed');
+                
+                const result = await res.json();
+                if (!result.success || !result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="status-msg">NO SCHEDULE DATA AVAILABLE</div>`;
                     return;
                 }
 
-                cachedScheduleData = items;
-                renderSchedule();
+                container.innerHTML = '';
+                let activeRow = null;
+
+                result.data.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = `schedule-item ${item.isLive ? 'live' : ''}`;
+                    row.innerHTML = `
+                        <span class="schedule-time">${item.time} WIB</span>
+                        <span class="schedule-program">${item.title}</span>
+                        ${item.isLive ? '<span class="badge-now">ON AIR</span>' : ''}
+                    `;
+
+                    container.appendChild(row);
+
+                    if (item.isLive) {
+                        activeRow = row;
+                    }
+                });
+
+                // Auto-scroll ke acara yang sedang ON AIR
+                if (activeRow) {
+                    activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
 
             } catch (err) {
                 console.error(err);
-                if (cachedScheduleData.length === 0) {
-                    container.innerHTML = `<div class="status-msg">FAILED TO FETCH SCHEDULE STREAM</div>`;
-                }
+                container.innerHTML = `<div class="status-msg">FAILED TO CONNECT TO SCHEDULE WORKER</div>`;
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             initPlayer();
-            fetchRTVSchedule();
+            fetchSchedule();
             
-            // Re-evaluasi waktu lokal tiap 10 detik agar pergantian status ON AIR presisi setelah detik ke-30
-            setInterval(renderSchedule, 10000);
-
-            // Fetch ulang data server tiap 5 menit (bypass cache)
-            setInterval(fetchRTVSchedule, 300000);
+            // Re-fetch tiap 15 detik agar status ON AIR berpindah tepat waktu berdasarkan offset Worker
+            setInterval(fetchSchedule, 15000);
         });
     </script>
 </body>
