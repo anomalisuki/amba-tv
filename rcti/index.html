@@ -7,23 +7,24 @@
     <style>
         :root { 
             --bg-color: #050507; 
+            --panel-bg: #0b0c10;
             --neon-cyan: #00f2fe; 
+            --neon-pink: #ff0055;
             --text-main: #ffffff; 
             --text-muted: #6c7a89; 
+            --border-glow: rgba(0, 242, 254, 0.2);
         }
         *, *::before, *::after { box-sizing: border-box; }
         body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Segoe UI', Roboto, monospace, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 0; 
+            padding: 20px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; 
             min-height: 100vh; 
-            padding: 20px;
         }
         .player-header { 
             width: 100%; 
@@ -32,7 +33,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            border-bottom: 1px solid rgba(0, 242, 254, 0.2); 
+            border-bottom: 1px solid var(--border-glow); 
             padding-bottom: 15px; 
         }
         .title-display { 
@@ -45,8 +46,8 @@
         }
         .badge-live { 
             background: rgba(255, 0, 85, 0.1); 
-            color: #ff0055; 
-            border: 1px solid #ff0055; 
+            color: var(--neon-pink); 
+            border: 1px solid var(--neon-pink); 
             padding: 6px 12px; 
             font-size: 11px; 
             font-weight: bold; 
@@ -72,10 +73,99 @@
             display: block; 
             aspect-ratio: 16 / 9; 
         }
+
+        /* Styling Jadwal TV */
+        .schedule-section {
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 25px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        .schedule-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .schedule-container {
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .schedule-container::-webkit-scrollbar { width: 4px; }
+        .schedule-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        .schedule-container::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 4px; }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        .schedule-item:hover {
+            background: rgba(0, 242, 254, 0.05);
+        }
+        .schedule-time {
+            color: var(--neon-cyan);
+            font-weight: bold;
+            width: 90px;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        .schedule-program {
+            flex-grow: 1;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .schedule-item.live {
+            background: rgba(255, 0, 85, 0.08);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.1);
+        }
+        .schedule-item.live .schedule-program {
+            color: #fff;
+            font-weight: bold;
+        }
+        .badge-now {
+            background: var(--neon-pink);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .status-msg {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+            letter-spacing: 1px;
+        }
+
         .btn-back { 
             margin-top: 25px; 
             background: transparent; 
-            color: #6c7a89; 
+            color: var(--text-muted); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 12px 24px; 
             font-size: 12px; 
@@ -103,7 +193,6 @@
     </div>
     
     <div class="video-wrapper">
-        <!-- Menggunakan iframe langsung untuk live streaming Detik/Trans7 -->
         <iframe 
             src="https://sindikasi.inews.id/embed/video/YWdlbnQ9ZGVza3RvcCZ1cmw9aHR0cHMlM0ElMkYlMkZlbWJlZC5yY3RpcGx1cy5jb20lMkZsaXZlJTJGcmN0aSUyRmluZXdzaWQmaGVpZ2h0PTEwMCUyNSZ3aWR0aD0xMDAlMjU=" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
@@ -113,8 +202,75 @@
         </iframe>
     </div>
 
+    <div class="schedule-section">
+        <div class="schedule-title">
+            <span>[#] BROADCAST SCHEDULE</span>
+        </div>
+        <div id="schedule-container" class="schedule-container">
+            <div class="status-msg">CONNECTING TO WORKER...</div>
+        </div>
+    </div>
+
     <!-- Kembali ke root utama folder home -->
     <a href="../" class="btn-back">✕ DISCONNECT TERMINAL</a>
 
+    <script>
+        // --- KONFIGURASI ---
+        const WORKER_URL = 'https://schedule.daviesdavid528.workers.dev/'; 
+        const TARGET_CHANNEL_URL = 'https://www.jadwaltv.net/channel/rcti'; 
+
+        // Fetch Jadwal dari Cloudflare Worker
+        async function fetchSchedule() {
+            const container = document.getElementById('schedule-container');
+            
+            try {
+                const endpoint = `${WORKER_URL}?url=${encodeURIComponent(TARGET_CHANNEL_URL)}&_=${Date.now()}`;
+                
+                const res = await fetch(endpoint);
+                if (!res.ok) throw new Error('Worker response failed');
+                
+                const result = await res.json();
+                if (!result.success || !result.data || result.data.length === 0) {
+                    container.innerHTML = `<div class="status-msg">NO SCHEDULE DATA AVAILABLE</div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                let activeRow = null;
+
+                result.data.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = `schedule-item ${item.isLive ? 'live' : ''}`;
+                    row.innerHTML = `
+                        <span class="schedule-time">${item.time} WIB</span>
+                        <span class="schedule-program">${item.title}</span>
+                        ${item.isLive ? '<span class="badge-now">ON AIR</span>' : ''}
+                    `;
+
+                    container.appendChild(row);
+
+                    if (item.isLive) {
+                        activeRow = row;
+                    }
+                });
+
+                // Auto-scroll ke acara yang sedang ON AIR
+                if (activeRow) {
+                    activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="status-msg">FAILED TO CONNECT TO SCHEDULE WORKER</div>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchSchedule();
+            
+            // Re-fetch tiap 15 detik agar status ON AIR berpindah tepat waktu
+            setInterval(fetchSchedule, 15000);
+        });
+    </script>
 </body>
 </html>
