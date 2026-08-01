@@ -1,6 +1,6 @@
 // ─── PENGATURAN MAINTENANCE AMBA TV ───
 const ALL_MAINTENANCE = false;
-const MAINTENANCE_CHANNELS = [];
+const MAINTENANCE_CHANNELS = ['mentari-tv'];
 // ───────────────────────────────────────
 
 export default async function middleware(request) {
